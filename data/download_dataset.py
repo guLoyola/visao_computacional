@@ -5,3 +5,5 @@ import kagglehub
 path = kagglehub.dataset_download("asadullahgalib/guava-disease-dataset")
 
 print("Path to dataset files:", path)
+
+# mv ~/.cache/kagglehub/datasets/asadullahgalib/ .
