@@ -1,9 +1,16 @@
 import kagglehub
+import os
 
-# path = kagglehub.dataset_download("shifatearman/bananalsd")
+os.makedirs('./data', exist_ok=True)
 
-path = kagglehub.dataset_download("asadullahgalib/guava-disease-dataset")
+os.environ['KAGGLE_DATA_DIR'] = './data'
 
-print("Path to dataset files:", path)
+print("Baixando datasets...")
 
-# mv ~/.cache/kagglehub/datasets/asadullahgalib/ .
+banana_path = kagglehub.dataset_download('shifatearman/bananalsd')
+print(f"BananaLSD baixado em: {banana_path}")
+
+guava_path = kagglehub.dataset_download('asadullahgalib/guava-disease-dataset')
+print(f"Guava Disease baixado em: {guava_path}")
+
+print("\nDownloads concluídos!")
