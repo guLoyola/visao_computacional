@@ -2,6 +2,7 @@ from pipeline.metrics import ClassificationMetrics
 from pipeline.renet_50 import ResNet50
 from pipeline.mobile_net_v3 import MobileNetV3_Large
 from pipeline.efficient_net import EfficientNet_B0, EfficientNet_B1
+from pipeline.visualizations import quick_visualize_all, plot_model_comparison
 import os
 import sys
 import torch
@@ -289,6 +290,17 @@ if __name__ == '__main__':
             dirs['metrics'], f'{model_name.lower().replace(" ", "_")}_metrics.txt')
         metrics.save_to_txt(metrics_file)
 
+        print(f"\nGerando visualizações para {model_name}...")
+        quick_visualize_all(
+            metrics_obj=metrics,
+            train_losses=train_losses,
+            val_losses=val_losses,
+            train_accuracies=train_accs,
+            val_accuracies=val_accs,
+            save_dir=dirs['visualizations'],
+            model_name=model_name
+        )
+
         results[model_name] = {
             'accuracy': metrics.accuracy,
             'precision': metrics.precision_weighted,
@@ -321,6 +333,11 @@ if __name__ == '__main__':
     summary_path = os.path.join(dirs['base'], 'summary.json')
     with open(summary_path, 'w') as f:
         json.dump(results, f, indent=4)
+
+    print(f"\nGerando gráfico de comparação entre modelos...")
+    comparison_path = os.path.join(
+        dirs['visualizations'], 'models_comparison.png')
+    plot_model_comparison(results, save_path=comparison_path)
 
     print(f"\n{'='*70}")
     print("✓ PIPELINE COMPLETO!")
