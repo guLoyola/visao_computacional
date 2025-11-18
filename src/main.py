@@ -1,5 +1,5 @@
 from pipeline.metrics import ClassificationMetrics
-from pipeline.renet_50 import ResNet50
+from pipeline.resnet_50 import ResNet50
 from pipeline.mobile_net_v3 import MobileNetV3_Large
 from pipeline.efficient_net import EfficientNet_B0, EfficientNet_B1
 from pipeline.visualizations import quick_visualize_all, plot_model_comparison
