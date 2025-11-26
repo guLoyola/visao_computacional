@@ -104,7 +104,6 @@ for guava_orig, guava_dest in guava_classes.items():
         dest_path = os.path.join(out_dir, split, guava_dest)
 
         if os.path.exists(src_path):
-            # Copiar arquivos
             images = [f for f in os.listdir(src_path)
                       if f.lower().endswith(('.jpeg', '.jpg', '.png'))]
 
