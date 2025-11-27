@@ -59,60 +59,104 @@ for split in splits:
 print("=== Processando Banana Dataset (OriginalSet + AugmentedSet) ===")
 
 for banana_orig, banana_dest in banana_classes.items():
-    all_images = []
+    original_images = []
+    augmented_images = []
 
     original_path = os.path.join(banana_root, 'OriginalSet', banana_orig)
     if os.path.exists(original_path):
         for img_file in os.listdir(original_path):
             if img_file.lower().endswith(('.jpeg', '.jpg', '.png')):
-                all_images.append(('original', os.path.join(
-                    original_path, img_file), img_file))
+                original_images.append(os.path.join(original_path, img_file))
 
     augmented_path = os.path.join(banana_root, 'AugmentedSet', banana_orig)
     if os.path.exists(augmented_path):
         for img_file in os.listdir(augmented_path):
             if img_file.lower().endswith(('.jpeg', '.jpg', '.png')):
-                all_images.append(('augmented', os.path.join(
-                    augmented_path, img_file), img_file))
+                augmented_images.append(os.path.join(augmented_path, img_file))
 
-    random.shuffle(all_images)
+    random.shuffle(original_images)
 
-    total = len(all_images)
+    total = len(original_images)
     train_end = int(total * split_ratios['train'])
     val_end = train_end + int(total * split_ratios['val'])
 
-    splits_images = {
-        'train': all_images[:train_end],
-        'val': all_images[train_end:val_end],
-        'test': all_images[val_end:]
-    }
+    train_originals = original_images[:train_end]
+    val_originals = original_images[train_end:val_end]
+    test_originals = original_images[val_end:]
 
-    for split, split_images in splits_images.items():
-        dest_path = os.path.join(out_dir, split, banana_dest)
+    dest_train = os.path.join(out_dir, 'train', banana_dest)
+    for src_file in train_originals:
+        img_file = os.path.basename(src_file)
+        dest_file = os.path.join(dest_train, f'banana_original_{img_file}')
+        shutil.copy2(src_file, dest_file)
 
-        for source_type, src_file, img_file in split_images:
-            dest_file = os.path.join(
-                dest_path, f'banana_{source_type}_{img_file}')
-            shutil.copy2(src_file, dest_file)
+    for src_file in augmented_images:
+        img_file = os.path.basename(src_file)
+        dest_file = os.path.join(dest_train, f'banana_augmented_{img_file}')
+        shutil.copy2(src_file, dest_file)
 
-        print(f'✓ {banana_dest} ({split}): {len(split_images)} imagens')
+    print(
+        f'✓ {banana_dest} (train): {len(train_originals) + len(augmented_images)} imagens')
+
+    dest_val = os.path.join(out_dir, 'val', banana_dest)
+    for src_file in val_originals:
+        img_file = os.path.basename(src_file)
+        dest_file = os.path.join(dest_val, f'banana_original_{img_file}')
+        shutil.copy2(src_file, dest_file)
+
+    print(f'✓ {banana_dest} (val): {len(val_originals)} imagens')
+
+    dest_test = os.path.join(out_dir, 'test', banana_dest)
+    for src_file in test_originals:
+        img_file = os.path.basename(src_file)
+        dest_file = os.path.join(dest_test, f'banana_original_{img_file}')
+        shutil.copy2(src_file, dest_file)
+
+    print(f'✓ {banana_dest} (test): {len(test_originals)} imagens')
 
 print("\n=== Processando Guava Dataset ===")
 for guava_orig, guava_dest in guava_classes.items():
-    for split in splits:
-        src_path = os.path.join(guava_base, split, guava_orig)
-        dest_path = os.path.join(out_dir, split, guava_dest)
+    train_src = os.path.join(guava_base, 'train', guava_orig)
+    train_dest = os.path.join(out_dir, 'train', guava_dest)
 
-        if os.path.exists(src_path):
-            images = [f for f in os.listdir(src_path)
+    if os.path.exists(train_src):
+        train_images = [f for f in os.listdir(train_src)
+                        if f.lower().endswith(('.jpeg', '.jpg', '.png'))]
+
+        for img_file in train_images:
+            src_file = os.path.join(train_src, img_file)
+            dest_file = os.path.join(train_dest, f'guava_{img_file}')
+            shutil.copy2(src_file, dest_file)
+
+        print(f'✓ {guava_dest} (train): {len(train_images)} imagens')
+
+    val_src = os.path.join(guava_base, 'val', guava_orig)
+    val_dest = os.path.join(out_dir, 'val', guava_dest)
+
+    if os.path.exists(val_src):
+        val_images = [f for f in os.listdir(val_src)
                       if f.lower().endswith(('.jpeg', '.jpg', '.png'))]
 
-            for img_file in images:
-                src_file = os.path.join(src_path, img_file)
-                dest_file = os.path.join(dest_path, f'guava_{img_file}')
-                shutil.copy2(src_file, dest_file)
+        for img_file in val_images:
+            src_file = os.path.join(val_src, img_file)
+            dest_file = os.path.join(val_dest, f'guava_{img_file}')
+            shutil.copy2(src_file, dest_file)
 
-            print(f'✓ {guava_dest} ({split}): {len(images)} imagens')
+        print(f'✓ {guava_dest} (val): {len(val_images)} imagens')
+
+    test_src = os.path.join(guava_base, 'test', guava_orig)
+    test_dest = os.path.join(out_dir, 'test', guava_dest)
+
+    if os.path.exists(test_src):
+        test_images = [f for f in os.listdir(test_src)
+                       if f.lower().endswith(('.jpeg', '.jpg', '.png'))]
+
+        for img_file in test_images:
+            src_file = os.path.join(test_src, img_file)
+            dest_file = os.path.join(test_dest, f'guava_{img_file}')
+            shutil.copy2(src_file, dest_file)
+
+        print(f'✓ {guava_dest} (test): {len(test_images)} imagens')
 
 print(f"\n✅ Dataset misto criado com sucesso em: {out_dir}")
 
