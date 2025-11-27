@@ -1,8 +1,9 @@
 import random
-import shutil
 import os
+from PIL import Image
 
 out_dir = os.path.join('data', 'mixed_dataset')
+TARGET_SIZE = (224, 224)
 
 """
 Mistura os datasets GuavaDiseaseDataset e BananaLSD criando um novo dataset combinado.
@@ -86,31 +87,39 @@ for banana_orig, banana_dest in banana_classes.items():
 
     dest_train = os.path.join(out_dir, 'train', banana_dest)
     for src_file in train_originals:
+        img = Image.open(src_file).convert('RGB')
+        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img_file = os.path.basename(src_file)
         dest_file = os.path.join(dest_train, f'banana_original_{img_file}')
-        shutil.copy2(src_file, dest_file)
+        img.save(dest_file)
 
     for src_file in augmented_images:
+        img = Image.open(src_file).convert('RGB')
+        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img_file = os.path.basename(src_file)
         dest_file = os.path.join(dest_train, f'banana_augmented_{img_file}')
-        shutil.copy2(src_file, dest_file)
+        img.save(dest_file)
 
     print(
         f'✓ {banana_dest} (train): {len(train_originals) + len(augmented_images)} imagens')
 
     dest_val = os.path.join(out_dir, 'val', banana_dest)
     for src_file in val_originals:
+        img = Image.open(src_file).convert('RGB')
+        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img_file = os.path.basename(src_file)
         dest_file = os.path.join(dest_val, f'banana_original_{img_file}')
-        shutil.copy2(src_file, dest_file)
+        img.save(dest_file)
 
     print(f'✓ {banana_dest} (val): {len(val_originals)} imagens')
 
     dest_test = os.path.join(out_dir, 'test', banana_dest)
     for src_file in test_originals:
+        img = Image.open(src_file).convert('RGB')
+        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
         img_file = os.path.basename(src_file)
         dest_file = os.path.join(dest_test, f'banana_original_{img_file}')
-        shutil.copy2(src_file, dest_file)
+        img.save(dest_file)
 
     print(f'✓ {banana_dest} (test): {len(test_originals)} imagens')
 
@@ -125,8 +134,10 @@ for guava_orig, guava_dest in guava_classes.items():
 
         for img_file in train_images:
             src_file = os.path.join(train_src, img_file)
+            img = Image.open(src_file).convert('RGB')
+            img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
             dest_file = os.path.join(train_dest, f'guava_{img_file}')
-            shutil.copy2(src_file, dest_file)
+            img.save(dest_file)
 
         print(f'✓ {guava_dest} (train): {len(train_images)} imagens')
 
@@ -139,8 +150,10 @@ for guava_orig, guava_dest in guava_classes.items():
 
         for img_file in val_images:
             src_file = os.path.join(val_src, img_file)
+            img = Image.open(src_file).convert('RGB')
+            img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
             dest_file = os.path.join(val_dest, f'guava_{img_file}')
-            shutil.copy2(src_file, dest_file)
+            img.save(dest_file)
 
         print(f'✓ {guava_dest} (val): {len(val_images)} imagens')
 
@@ -153,8 +166,10 @@ for guava_orig, guava_dest in guava_classes.items():
 
         for img_file in test_images:
             src_file = os.path.join(test_src, img_file)
+            img = Image.open(src_file).convert('RGB')
+            img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
             dest_file = os.path.join(test_dest, f'guava_{img_file}')
-            shutil.copy2(src_file, dest_file)
+            img.save(dest_file)
 
         print(f'✓ {guava_dest} (test): {len(test_images)} imagens')
 
