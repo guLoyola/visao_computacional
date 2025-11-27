@@ -198,6 +198,118 @@ def plot_model_comparison(
     plt.close()
 
 
+def plot_training_progress_comparison(
+    training_histories: dict,
+    metric: str = 'mAP50-95',
+    save_path: Optional[str] = None
+):
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    colors = {'mobilenetv3': '#2ecc71',
+              'efficientnet-b0': '#e67e22', 'resnet50': '#3498db'}
+    model_display_names = {
+        'mobilenetv3': 'MobileNetV3',
+        'efficientnet-b0': 'EfficientNet-B0',
+        'resnet50': 'ResNet50'
+    }
+
+    for model_name, history in training_histories.items():
+        if metric in history:
+            progress = np.linspace(0, 100, len(history[metric]))
+            display_name = model_display_names.get(model_name, model_name)
+            color = colors.get(model_name, '#95a5a6')
+            ax.plot(progress, history[metric], label=display_name,
+                    color=color, linewidth=2)
+
+    ax.set_xlabel('Progresso do Treino (%)', fontsize=12)
+    ax.set_ylabel(metric, fontsize=12)
+    ax.set_title(f'Comparação de modelos - {metric} ao longo do treino',
+                 fontsize=14, fontweight='bold')
+    ax.legend(fontsize=11)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0, 100)
+
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"✓ Gráfico de progresso de treino salvo em: {save_path}")
+
+    plt.close()
+
+
+def create_comparison_table(
+    results: dict,
+    save_path: Optional[str] = None
+):
+    model_display_names = {
+        'mobilenetv3': 'MobileNetV3',
+        'efficientnet-b0': 'EfficientNet-B0',
+        'resnet50': 'ResNet50'
+    }
+
+    metrics_display = {
+        'mAP@50': 'mAP@50',
+        'mAP@50-95': 'mAP@50-95',
+        'precision': 'Precision',
+        'recall': 'Recall',
+        'f1': 'F1-score',
+        'stability': 'Estabilidade (oscilações)',
+        'overfitting': 'Overfitting (gap treino/val)',
+        'efficiency': 'Eficiência',
+        'inference_time': 'Tempo de inferência (ms/img)',
+        'model_size': 'Tamanho do modelo (MB)',
+        'generalization': 'Generalização'
+    }
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+    ax.axis('tight')
+    ax.axis('off')
+
+    table_data = []
+    header = ['Critério'] + \
+        [model_display_names.get(m, m) for m in results.keys()]
+    table_data.append(header)
+
+    for metric_key, metric_label in metrics_display.items():
+        row = [metric_label]
+        for model_name in results.keys():
+            value = results[model_name].get(metric_key, 0)
+            if isinstance(value, (int, float)):
+                row.append(f'{value:.4f}')
+            else:
+                row.append(str(value))
+        table_data.append(row)
+
+    table = ax.table(cellText=table_data, cellLoc='center', loc='center',
+                     colWidths=[0.25] + [0.25] * len(results))
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 2.5)
+
+    for i in range(len(table_data[0])):
+        table[(0, i)].set_facecolor('#3498db')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+
+    for i in range(1, len(table_data)):
+        for j in range(len(table_data[0])):
+            if j == 0:
+                table[(i, j)].set_facecolor('#ecf0f1')
+                table[(i, j)].set_text_props(weight='bold')
+            else:
+                table[(i, j)].set_facecolor('white')
+
+    plt.title('Comparação de Modelos - Métricas Detalhadas',
+              fontsize=16, fontweight='bold', pad=20)
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"✓ Tabela de comparação salva em: {save_path}")
+
+    plt.close()
+
+
 def quick_visualize_all(
     metrics_obj,
     train_losses: List[float],

@@ -2,7 +2,12 @@ from pipeline.metrics import ClassificationMetrics
 from pipeline.resnet_50 import ResNet50
 from pipeline.mobile_net_v3 import MobileNetV3_Large
 from pipeline.efficient_net import EfficientNet_B0, EfficientNet_B1
-from pipeline.visualizations import quick_visualize_all, plot_model_comparison
+from pipeline.visualizations import (
+    quick_visualize_all,
+    plot_model_comparison,
+    plot_training_progress_comparison,
+    create_comparison_table
+)
 import os
 import sys
 import torch
@@ -14,6 +19,7 @@ from torchvision.datasets import ImageFolder
 import numpy as np
 from datetime import datetime
 import json
+import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -182,6 +188,66 @@ def evaluate_model(model, test_loader, class_names, device='cuda'):
     return metrics
 
 
+def calculate_additional_metrics(train_accs, val_accs, train_losses, val_losses):
+    stability = np.std(
+        val_accs[-5:]) if len(val_accs) >= 5 else np.std(val_accs)
+
+    overfitting = train_accs[-1] - \
+        val_accs[-1] if train_accs and val_accs else 0
+
+    generalization = val_accs[-1] - val_accs[0] if len(val_accs) > 1 else 0
+
+    return {
+        'stability': stability,
+        'overfitting': overfitting,
+        'generalization': generalization
+    }
+
+
+def measure_inference_time(model, test_loader, device, num_samples=100):
+    model.eval()
+    times = []
+    samples_processed = 0
+
+    with torch.no_grad():
+        for inputs, _ in test_loader:
+            if samples_processed >= num_samples:
+                break
+
+            inputs = inputs.to(device)
+            batch_size = inputs.size(0)
+
+            start_time = time.time()
+            _ = model(inputs)
+            end_time = time.time()
+
+            batch_time = (end_time - start_time) * 1000
+            time_per_image = batch_time / batch_size
+            times.append(time_per_image)
+
+            samples_processed += batch_size
+
+    return np.mean(times)
+
+
+def get_model_size_mb(model):
+    param_size = sum(p.nelement() * p.element_size()
+                     for p in model.parameters())
+    buffer_size = sum(b.nelement() * b.element_size() for b in model.buffers())
+    size_mb = (param_size + buffer_size) / (1024 ** 2)
+    return size_mb
+
+
+def calculate_map_metrics(metrics, train_accs, val_accs):
+    map_50 = metrics.accuracy
+    map_50_95 = metrics.f1_weighted
+
+    return {
+        'mAP@50': map_50,
+        'mAP@50-95': map_50_95
+    }
+
+
 def save_run_config(dirs, config):
     config_path = os.path.join(dirs['base'], 'config.json')
     with open(config_path, 'w') as f:
@@ -257,7 +323,14 @@ if __name__ == '__main__':
         'ResNet50': lambda: ResNet50(num_classes=num_classes)
     }
 
+    model_key_mapping = {
+        'EfficientNet-B0': 'efficientnet-b0',
+        'MobileNetV3-Large': 'mobilenetv3',
+        'ResNet50': 'resnet50'
+    }
+
     results = {}
+    training_histories = {}
 
     for model_name in config['models_to_train']:
         if model_name not in available_models:
@@ -301,16 +374,54 @@ if __name__ == '__main__':
             model_name=model_name
         )
 
-        results[model_name] = {
+        print(f"\nCalculando métricas adicionais para {model_name}...")
+        additional_metrics = calculate_additional_metrics(
+            train_accs, val_accs, train_losses, val_losses
+        )
+
+        print(f"Medindo tempo de inferência para {model_name}...")
+        inference_time = measure_inference_time(model, test_loader, device_str)
+
+        model_size = get_model_size_mb(model)
+
+        map_metrics = calculate_map_metrics(metrics, train_accs, val_accs)
+
+        num_params = sum(p.numel() for p in model.parameters())
+        efficiency = num_params / 1e6
+
+        model_key = model_key_mapping.get(model_name, model_name.lower())
+
+        results[model_key] = {
             'accuracy': metrics.accuracy,
             'precision': metrics.precision_weighted,
             'recall': metrics.recall_weighted,
             'f1': metrics.f1_weighted,
             'mcc': metrics.mcc,
-            'kappa': metrics.kappa
+            'kappa': metrics.kappa,
+            'mAP@50': map_metrics['mAP@50'],
+            'mAP@50-95': map_metrics['mAP@50-95'],
+            'stability': additional_metrics['stability'],
+            'overfitting': additional_metrics['overfitting'],
+            'generalization': additional_metrics['generalization'],
+            'inference_time': inference_time,
+            'model_size': model_size,
+            'efficiency': efficiency
+        }
+
+        training_histories[model_key] = {
+            'mAP50-95': val_accs,
+            'train_loss': train_losses,
+            'val_loss': val_losses,
+            'train_acc': train_accs,
+            'val_acc': val_accs
         }
 
         print(f"\n✓ {model_name} completo!")
+        print(f"  Tamanho do modelo: {model_size:.2f} MB")
+        print(f"  Tempo de inferência: {inference_time:.2f} ms/img")
+        print(f"  Estabilidade: {additional_metrics['stability']:.4f}")
+        print(f"  Overfitting: {additional_metrics['overfitting']:.4f}")
+        print(f"  Generalização: {additional_metrics['generalization']:.4f}")
 
     print(f"\n{'='*70}")
     print("RESUMO FINAL DA RUN")
@@ -334,10 +445,23 @@ if __name__ == '__main__':
     with open(summary_path, 'w') as f:
         json.dump(results, f, indent=4)
 
-    print(f"\nGerando gráfico de comparação entre modelos...")
+    print(f"\nGerando gráficos de comparação entre modelos...")
+
     comparison_path = os.path.join(
         dirs['visualizations'], 'models_comparison.png')
     plot_model_comparison(results, save_path=comparison_path)
+
+    progress_comparison_path = os.path.join(
+        dirs['visualizations'], 'training_progress_comparison.png')
+    plot_training_progress_comparison(
+        training_histories,
+        metric='mAP50-95',
+        save_path=progress_comparison_path
+    )
+
+    table_path = os.path.join(
+        dirs['visualizations'], 'comparison_table.png')
+    create_comparison_table(results, save_path=table_path)
 
     print(f"\n{'='*70}")
     print("✓ PIPELINE COMPLETO!")
