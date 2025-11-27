@@ -1,0 +1,66 @@
+======================================================================
+RESUMO DAS MÉTRICAS DE AVALIAÇÃO
+======================================================================
+
+--- MÉTRICAS GERAIS ---
+Accuracy                       : 0.9708
+Precision (weighted)           : 0.9736
+Recall (weighted)              : 0.9708
+F1-Score (weighted)            : 0.9713
+Matthews Correlation Coef.     : 0.9621
+Cohen's Kappa                  : 0.9619
+ROC AUC (weighted)             : 0.9994
+
+--- MÉTRICAS POR CLASSE ---
+
+anthracnose:
+  Precision   : 1.0000  |  Recall      : 0.9808
+  F1-Score    : 0.9903  |  Specificity : 1.0000
+  ROC AUC     : 0.9998  |  Support     : 156
+
+cordana:
+  Precision   : 1.0000  |  Recall      : 1.0000
+  F1-Score    : 1.0000  |  Specificity : 1.0000
+  ROC AUC     : 1.0000  |  Support     : 17
+
+fruit_fly:
+  Precision   : 0.9562  |  Recall      : 0.9924
+  F1-Score    : 0.9740  |  Specificity : 0.9827
+  ROC AUC     : 0.9993  |  Support     : 132
+
+healthy_banana:
+  Precision   : 0.9167  |  Recall      : 0.7857
+  F1-Score    : 0.8462  |  Specificity : 0.9978
+  ROC AUC     : 0.9975  |  Support     : 14
+
+healthy_guava:
+  Precision   : 0.9891  |  Recall      : 0.9681
+  F1-Score    : 0.9785  |  Specificity : 0.9974
+  ROC AUC     : 0.9997  |  Support     : 94
+
+pestalotiopsis:
+  Precision   : 0.7391  |  Recall      : 0.9444
+  F1-Score    : 0.8293  |  Specificity : 0.9870
+  ROC AUC     : 0.9954  |  Support     : 18
+
+sigatoka:
+  Precision   : 1.0000  |  Recall      : 0.9375
+  F1-Score    : 0.9677  |  Specificity : 1.0000
+  ROC AUC     : 0.9994  |  Support     : 48
+
+--- CLASSIFICATION REPORT ---
+                precision    recall  f1-score   support
+
+   anthracnose     1.0000    0.9808    0.9903       156
+       cordana     1.0000    1.0000    1.0000        17
+     fruit_fly     0.9562    0.9924    0.9740       132
+healthy_banana     0.9167    0.7857    0.8462        14
+ healthy_guava     0.9891    0.9681    0.9785        94
+pestalotiopsis     0.7391    0.9444    0.8293        18
+      sigatoka     1.0000    0.9375    0.9677        48
+
+      accuracy                         0.9708       479
+     macro avg     0.9430    0.9441    0.9408       479
+  weighted avg     0.9736    0.9708    0.9713       479
+
+======================================================================

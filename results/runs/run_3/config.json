@@ -1,0 +1,12 @@
+{
+    "dataset_path": "data/mixed_dataset",
+    "num_epochs": 10,
+    "batch_size": 32,
+    "learning_rate": 0.0001,
+    "models_to_train": [
+        "EfficientNet-B0",
+        "MobileNetV3-Large",
+        "ResNet50"
+    ],
+    "timestamp": "2025-11-26 21:50:24"
+}
